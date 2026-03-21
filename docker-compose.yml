@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ocas_postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER:-ocas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ocas}
+      POSTGRES_DB: ${DB_NAME:-ocas}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ocas_pgdata:/var/lib/postgresql/data
+
+volumes:
+  ocas_pgdata:
