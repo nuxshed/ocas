@@ -57,14 +57,18 @@ async fn main() {
     let limited = Router::new()
         .route("/register", post(routes::register::register))
         .route("/login", post(routes::login::login))
+        .route("/authorize", get(routes::authorize::show))
+        .route("/authorize", post(routes::authorize::submit))
         .layer(axummw::from_fn_with_state(
             state.clone(),
             middleware::ratelimit,
         ));
 
     let open = Router::new()
+        .route("/token", post(routes::token::exchange))
         .route("/token/refresh", post(routes::token::refresh))
         .route("/token/revoke", post(routes::token::revoke))
+        .route("/clients", post(routes::clients::create))
         .route("/jwks.json", get(routes::discovery::jwks))
         .route(
             "/.well-known/openid-configuration",

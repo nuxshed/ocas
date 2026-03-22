@@ -26,3 +26,25 @@ pub struct RefreshToken {
     pub expiresat: DateTime<Utc>,
     pub createdat: DateTime<Utc>,
 }
+
+#[derive(sqlx::FromRow)]
+#[allow(dead_code)]
+pub struct Client {
+    pub clientid: String,
+    pub secrethash: String,
+    pub redirecturis: Vec<String>,
+    pub name: String,
+    pub createdat: DateTime<Utc>,
+}
+
+#[derive(sqlx::FromRow)]
+#[allow(dead_code)]
+pub struct AuthCode {
+    pub code: String,
+    pub clientid: String,
+    pub userid: Uuid,
+    pub redirecturi: String,
+    pub codechallenge: String,
+    pub expiresat: DateTime<Utc>,
+    pub used: bool,
+}

@@ -2,6 +2,8 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use rand::Rng;
+use sha2::{Digest, Sha256};
 
 use crate::error::AppError;
 
@@ -20,4 +22,28 @@ pub fn verifypw(password: &str, hash: &str) -> Result<bool, AppError> {
     Ok(Argon2::default()
         .verify_password(password.as_bytes(), &parsed)
         .is_ok())
+}
+
+/// generates a random 32-byte hex token
+pub fn gentoken() -> String {
+    let bytes: [u8; 32] = rand::thread_rng().gen();
+    hex::encode(bytes)
+}
+
+/// sha256 hash for storing tokens
+pub fn hashtoken(token: &str) -> String {
+    let mut h = Sha256::new();
+    h.update(token.as_bytes());
+    hex::encode(h.finalize())
+}
+
+/// generates a readable client id (8 hex chars)
+pub fn genclientid() -> String {
+    let bytes: [u8; 4] = rand::thread_rng().gen();
+    hex::encode(bytes)
+}
+
+/// generates a random client secret (32 bytes, hex)
+pub fn gensecret() -> String {
+    gentoken()
 }

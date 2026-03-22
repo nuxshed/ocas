@@ -3,13 +3,11 @@ use std::sync::Arc;
 use axum::extract::State;
 use axum::Json;
 use chrono::{Duration, Utc};
-use rand::Rng;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
 
 use crate::error::AppError;
-use crate::hash::verifypw;
+use crate::hash::{gentoken, hashtoken, verifypw};
 use crate::jwt;
 use crate::models::User;
 use crate::AppState;
@@ -45,7 +43,7 @@ pub async fn login(
     }
 
     let (access, _jti) = jwt::sign(&user, &state.config.privatekey)?;
-    let refresh = genrefresh();
+    let refresh = gentoken();
     let refreshhash = hashtoken(&refresh);
 
     let expiry = Utc::now() + Duration::days(30);
@@ -62,17 +60,4 @@ pub async fn login(
         "type": "bearer",
         "expires": 900,
     })))
-}
-
-/// generates a random 32-byte hex refresh token
-pub fn genrefresh() -> String {
-    let bytes: [u8; 32] = rand::thread_rng().gen();
-    hex::encode(bytes)
-}
-
-/// sha-256 hashes a refresh token for storage
-pub fn hashtoken(token: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(token.as_bytes());
-    hex::encode(hasher.finalize())
 }
