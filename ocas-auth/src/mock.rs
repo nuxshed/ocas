@@ -4,9 +4,9 @@ use axum::routing::get;
 use axum::{Json, Router};
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use rsa::pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey};
+use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
 use rsa::traits::PublicKeyParts;
-use rsa::{RsaPrivateKey, RsaPublicKey};
+use rsa::RsaPrivateKey;
 use serde::Serialize;
 use std::sync::LazyLock;
 use uuid::Uuid;
@@ -16,6 +16,8 @@ use crate::claims::{Claims, PersonType};
 struct DevKeypair {
     encoding: EncodingKey,
     publicpem: String,
+    publicn: String,
+    publice: String,
 }
 
 #[derive(Serialize)]
@@ -43,10 +45,13 @@ static DEVKEYS: LazyLock<DevKeypair> = LazyLock::new(|| {
         .to_public_key()
         .to_public_key_pem(rsa::pkcs8::LineEnding::LF)
         .expect("failed to encode public key");
+    let publickey = privkey.to_public_key();
 
     DevKeypair {
         encoding: EncodingKey::from_rsa_pem(privpem.as_bytes()).unwrap(),
         publicpem: pubpem,
+        publicn: URL_SAFE_NO_PAD.encode(publickey.n().to_bytes_be()),
+        publice: URL_SAFE_NO_PAD.encode(publickey.e().to_bytes_be()),
     }
 });
 
@@ -128,14 +133,11 @@ async fn jwks() -> Json<MockJwks> {
 }
 
 fn mockjwk() -> MockJwk {
-    let publickey = RsaPublicKey::from_public_key_pem(publickeypem())
-        .expect("failed to parse dev public key");
-
     MockJwk {
         kty: "RSA",
         alg: "RS256",
         use_: "sig",
-        n: URL_SAFE_NO_PAD.encode(publickey.n().to_bytes_be()),
-        e: URL_SAFE_NO_PAD.encode(publickey.e().to_bytes_be()),
+        n: DEVKEYS.publicn.clone(),
+        e: DEVKEYS.publice.clone(),
     }
 }
