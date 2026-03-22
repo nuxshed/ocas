@@ -1,8 +1,13 @@
 #![cfg(feature = "mock")]
 
+use axum::routing::get;
+use axum::{Json, Router};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
-use rsa::RsaPrivateKey;
+use rsa::pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey};
+use rsa::traits::PublicKeyParts;
+use rsa::{RsaPrivateKey, RsaPublicKey};
+use serde::Serialize;
 use std::sync::LazyLock;
 use uuid::Uuid;
 
@@ -11,6 +16,21 @@ use crate::claims::{Claims, PersonType};
 struct DevKeypair {
     encoding: EncodingKey,
     publicpem: String,
+}
+
+#[derive(Serialize)]
+struct MockJwks {
+    keys: Vec<MockJwk>,
+}
+
+#[derive(Serialize)]
+struct MockJwk {
+    kty: &'static str,
+    alg: &'static str,
+    #[serde(rename = "use")]
+    use_: &'static str,
+    n: String,
+    e: String,
 }
 
 static DEVKEYS: LazyLock<DevKeypair> = LazyLock::new(|| {
@@ -94,4 +114,28 @@ impl MockClaims {
 /// returns the dev public key pem for building a mock jwks
 pub fn publickeypem() -> &'static str {
     &DEVKEYS.publicpem
+}
+
+/// returns a mock jwks router for local testing
+pub fn mockjwks() -> Router {
+    Router::new().route("/jwks.json", get(jwks))
+}
+
+async fn jwks() -> Json<MockJwks> {
+    Json(MockJwks {
+        keys: vec![mockjwk()],
+    })
+}
+
+fn mockjwk() -> MockJwk {
+    let publickey = RsaPublicKey::from_public_key_pem(publickeypem())
+        .expect("failed to parse dev public key");
+
+    MockJwk {
+        kty: "RSA",
+        alg: "RS256",
+        use_: "sig",
+        n: URL_SAFE_NO_PAD.encode(publickey.n().to_bytes_be()),
+        e: URL_SAFE_NO_PAD.encode(publickey.e().to_bytes_be()),
+    }
 }
