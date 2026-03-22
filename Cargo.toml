@@ -1,3 +1,8 @@
+[workspace]
+members = [".", "ocas-auth", "example"]
+
+default-members = [".", "ocas-auth"]
+
 [package]
 name = "ocas"
 version = "0.1.0"

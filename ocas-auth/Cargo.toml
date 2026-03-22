@@ -1,0 +1,25 @@
+[package]
+name = "ocas-auth"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+mock = ["rsa"]
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["rt", "sync", "time"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+tower = "0.5"
+tracing = "0.1"
+sha2 = "0.10"
+base64 = "0.22"
+rand = "0.8"
+hex = "0.4"
+chrono = "0.4"
+rsa = { version = "0.9", features = ["pem"], optional = true }

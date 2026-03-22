@@ -63,6 +63,7 @@
               rust-analyzer
 
               sqlx-cli
+              jq
             ];
 
             env = {
