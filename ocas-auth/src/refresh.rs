@@ -106,7 +106,7 @@ fn accessexpired(token: &str) -> bool {
         Err(_) => return true,
     };
 
-    claims.exp <= Utc::now().timestamp()
+    claims.exp <= Utc::now().timestamp() + 5
 }
 
 fn setcookies(headers: &mut axum::http::HeaderMap, cookies: &str, access: &str, refresh: &str) {
